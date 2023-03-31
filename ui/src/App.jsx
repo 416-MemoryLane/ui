@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import { ImageViewer } from "./ImageViewer";
+import { ArrowForwardIcon } from "./Icons/ArrowForwardIcon";
 
 function App() {
   const [albums, setAlbums] = useState([]);
   const [selectedImage, setSelectedImage] = useState(undefined);
+  const [showAlbumOverview, setShowAlbumOverview] = useState(false);
+  const [selectedAlbum, setSelectedAlbum] = useState("");
 
   const fetchAlbums = async () => {
     const res = await fetch("http://localhost:4321/albums");
@@ -20,11 +23,17 @@ function App() {
     }, 3000);
   };
 
+  const goToAlbumOverview = () => {
+    setShowAlbumOverview(true);
+  };
+
   useEffect(() => {
     fetchAlbums();
   }, []);
 
-  return (
+  return showAlbumOverview ? (
+    <ArrowForwardIcon />
+  ) : (
     <div className="w-full flex justify-center align-middle">
       <ImageViewer
         selectedImage={selectedImage}
@@ -33,11 +42,24 @@ function App() {
       <div className="w-7/12 self-center">
         {albums.map(({ title, images }) => {
           return (
-            <div className="flex-row w-full my-5 bg-slate-200 p-5 rounded-xl">
-              <p className="text-2xl mb-3 font-semibold">{title}</p>
+            <div
+              key={`${title}-album`}
+              className="flex-row w-full my-5 bg-slate-200 p-5 rounded-xl"
+            >
+              <div className="flex justify-between">
+                <p className="text-2xl mb-3 font-semibold">{title}</p>
+                <div className="ml-auto">
+                  <ArrowForwardIcon
+                    id={`${title}-forwardIcon`}
+                    className=""
+                    onClick={goToAlbumOverview}
+                  />
+                </div>
+              </div>
               <div className="flex flex-row gap-5 flex-wrap">
-                {images.map((image) => (
+                {images.map((image, i) => (
                   <img
+                    key={`${title}-image-${i}`}
                     className="object-cover w-[300px] h-[200px] rounded-lg"
                     onClick={() => setSelectedImage(image)}
                     src={`http://localhost:4321${image}`}
