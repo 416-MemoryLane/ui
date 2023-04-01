@@ -25,21 +25,6 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
 
   const [index, setIndex] = useState(-1);
 
-  const addImage = async (imagePath, imageDataUrl) => {
-    const res = await fetch(`http://localhost:4321/albums/${title}/images`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({imagePath, imageDataUrl}),
-    });
-    if (res.ok) {
-      console.log("Image added");
-    } else {
-      console.log("Error adding image");
-    }
-  };
-
   const handleFileUpload = async () => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -60,9 +45,8 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
       }
     };
     input.click();
-  };
-  
-  
+    this.forceUadate();
+  };  
 
   return (
     <div className="mx-auto px-8 sm:px-10 lg:px-12">
