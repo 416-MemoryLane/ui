@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { MinusIcon } from "./Icons/MinusIcon";
 import { CloseIcon } from "./Icons/CloseIcon";
 import { PhotoAlbum } from "react-photo-album";
 import Lightbox from "yet-another-react-lightbox";
@@ -9,7 +10,7 @@ import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
-export const AlbumOverview = ({ title, images, onBackClick }) => {
+export const AlbumOverview = ({ albumTitle, images, onBackClick }) => {
   const thumbnails = useMemo(() => {
     return images.map((image, i) => {
       let url = `http://localhost:4321${image}`;
@@ -17,13 +18,13 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
       img.src = url;
       const width = img.width;
       const height = img.height;
-      return { src: url, width: width, height: height };
+      return { src: url, width: width, height: height, fileName: image.split("/").pop() };
     });
   }, [images]);
 
   const photos = useMemo(() => {
     return images.map((image, i) => {
-      return { src: `http://localhost:4321${image}` };
+      return { src: `http://localhost:4321${image}`};
     });
   }, [images]);
 
@@ -39,7 +40,7 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
       formData.append("myfile", file);
       try {
         const response = await fetch(
-          `http://localhost:4321/albums/${title}/images`,
+          `http://localhost:4321/albums/${albumTitle}/images`,
           {
             method: "POST",
             body: formData,
@@ -53,6 +54,10 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
     };
     input.click();
   };
+
+const handleFileDelete = async (fileName) => {
+    console.log(fileName);
+};
 
   const albumContainer = ({ containerProps, children, containerRef }) => (
     <div
@@ -71,7 +76,8 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
   const photoFrame = ({
     layout,
     layoutOptions,
-    imageProps: { alt, style, ...restImageProps },
+    imageProps: { style, ...restImageProps },
+    photo
   }) => (
     <div
       style={{
@@ -82,9 +88,14 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
         width: style?.width,
         padding: `20px`,
         margin: "5px",
+        position: "relative",
       }}
     >
-      <img alt={alt} style={{ ...style, width: "100%" }} {...restImageProps} />
+      <img style={{ ...style, width: "100%" }} {...restImageProps} />
+      <MinusIcon
+        className="text-gray-600 hover:fill-current hover:text-sky-400 cursor-pointer absolute top-0 right-0 opacity-50 px-1"
+        onClick={() => handleFileDelete(photo.fileName)}
+      />
     </div>
   );
 
@@ -94,10 +105,9 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
         <button className="px-3 hover:text-sky-400" onClick={handleFileUpload}>
           <span className="text-md font-semibold">Add Photo</span>
         </button>
-        <h1 className="text-2xl font-bold">{title}</h1>
-
+        <h1 className="text-2xl font-bold">{albumTitle}</h1>
         <CloseIcon
-          className="hover:fill-current hover:text-sky-400"
+          className="hover:fill-current hover:text-sky-400 cursor-pointer"
           onClick={onBackClick}
         ></CloseIcon>
       </div>
@@ -107,7 +117,7 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
         spacing={5}
         onClick={({ index }) => setIndex(index)}
         renderContainer={albumContainer}
-        renderPhoto={photoFrame}
+        renderPhoto={(props) => photoFrame({ ...props})}
       />
       <Lightbox
         slides={photos}

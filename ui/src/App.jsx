@@ -40,7 +40,7 @@ function App() {
   return showAlbumOverview ? (
     <div>
       <AlbumOverview
-        title={selectedAlbum}
+        albumTitle={selectedAlbum}
         images={albums.find((album) => album.title === selectedAlbum).images}
         onBackClick={handleAlbumOverviewBack}
       />
@@ -63,7 +63,7 @@ function App() {
                 <div className="ml-auto">
                   <ArrowForwardIcon
                     id={`${title}-forwardIcon`}
-                    className=""
+                    className="cursor-pointer"
                     onClick={() => handleAlbumSelection(title)}
                   />
                 </div>
