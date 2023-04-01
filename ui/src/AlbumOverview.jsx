@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { CloseIcon } from "./Icons/CloseIcon";
 import PhotoAlbum from "react-photo-album";
 import Lightbox from "yet-another-react-lightbox";
@@ -21,7 +21,7 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
     return images.map((image, i) => {
       return { src: `http://localhost:4321${image}` };
     });
-  }, []);
+  }, [images]);
 
   const [index, setIndex] = useState(-1);
 
@@ -45,7 +45,6 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
       }
     };
     input.click();
-    this.forceUadate();
   };  
 
   return (
@@ -71,6 +70,11 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
         open={index >= 0}
         index={index}
         close={() => setIndex(-1)}
+        on={{
+          view: ({ index }) => {
+            setIndex(index);
+          },
+        }}
         plugins={[Fullscreen, Slideshow, Thumbnails]}
       />
     </div>
