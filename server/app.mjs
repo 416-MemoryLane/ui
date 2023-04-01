@@ -15,17 +15,22 @@ const STATIC_PATH = "/static";
 app.use(STATIC_PATH, express.static(ALBUM_DIR));
 
 app.get("/albums", (req, res) => {
-  const albums = fs.readdirSync(ALBUM_DIR);
-  const struct = albums.map((albumName) => {
-    const images = fs.readdirSync(`${ALBUM_DIR}/${albumName}`);
-    return {
-      title: albumName,
-      images: images.map(
-        (fileName) => `${STATIC_PATH}/${albumName}/${fileName}`
-      ),
-    };
-  });
-  res.status(200).send(struct);
+  const albums = fs.readdirSync(ALBUM_DIR, { withFileTypes: true });
+  const albumStruct = albums
+    .map((album) => {
+      if (!album.isDirectory()) return null;
+      const images = fs.readdirSync(`${ALBUM_DIR}/${album.name}`, {
+        withFileTypes: true,
+      });
+      return {
+        title: album.name,
+        images: images
+          .filter((file) => file.isFile())
+          .map((file) => `${STATIC_PATH}/${album.name}/${file.name}`),
+      };
+    })
+    .filter((album) => album !== null);
+  res.status(200).send(albumStruct);
 });
 
 app.get("/albums/:id", (req, res) => {
