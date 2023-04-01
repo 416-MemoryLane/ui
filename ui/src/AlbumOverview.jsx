@@ -7,7 +7,6 @@ import "yet-another-react-lightbox/styles.css";
 import Fullscreen from "yet-another-react-lightbox/plugins/fullscreen";
 import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
-import Zoom from "yet-another-react-lightbox/plugins/zoom";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
 export const AlbumOverview = ({ title, images, onBackClick }) => {
@@ -33,20 +32,13 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
         photos={thumbnails}
         layout="rows"
         onClick={({ index }) => setIndex(index)}
-        // render like this because we only have the url, ignores width and height
-        renderImage={({ photo }) => (
-            <img
-              src={photo.src}
-              alt={photo.title}
-            />
-        )}
       />
       <Lightbox
         slides={photos}
         open={index >= 0}
         index={index}
         close={() => setIndex(-1)}
-        plugins={[Fullscreen, Slideshow, Thumbnails, Zoom]}
+        plugins={[Fullscreen, Slideshow, Thumbnails]}
       />
     </div>
   );
