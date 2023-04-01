@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MinusIcon } from "./Icons/MinusIcon";
 import { CloseIcon } from "./Icons/CloseIcon";
 import { PhotoAlbum } from "react-photo-album";
@@ -11,24 +11,9 @@ import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
 export const AlbumOverview = ({ albumTitle, images, onBackClick }) => {
-  const thumbnails = useMemo(() => {
-    return images.map((image, i) => {
-      let url = `http://localhost:4321${image}`;
-      const img = new Image();
-      img.src = url;
-      const width = img.width;
-      const height = img.height;
-      return { src: url, width: width, height: height, fileName: image.split("/").pop() };
-    });
-  }, [images]);
-
-  const photos = useMemo(() => {
-    return images.map((image, i) => {
-      return { src: `http://localhost:4321${image}`};
-    });
-  }, [images]);
-
   const [index, setIndex] = useState(-1);
+  const [thumbnails, setThumbnails] = useState([]);
+  const [photos, setPhotos] = useState([]);
 
   const handleFileUpload = async () => {
     const input = document.createElement("input");
@@ -55,20 +40,51 @@ export const AlbumOverview = ({ albumTitle, images, onBackClick }) => {
     input.click();
   };
 
-const handleFileDelete = async (fileName) => {
+  useEffect(() => {
+    const promises = images.map((image) => {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => {
+            const width = img.width;
+            const height = img.height;
+            resolve({ src: `http://localhost:4321${image}`, width: width, height: height, fileName: image.split("/").pop() });
+          };
+          img.onerror = () => {
+            reject(new Error(`Failed to load image: ${image}`));
+          };
+          img.src = `http://localhost:4321${image}`;
+        });
+      });
+    
+      Promise.all(promises)
+        .then((results) => {
+          const thumbnails = results.map((result) => {
+            return { src: result.src, width: result.width, height: result.height, fileName: result.fileName };
+          });
+          setThumbnails(thumbnails);
+          setPhotos(results.map((result) => {
+            return { src: result.src };
+          }));
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+  }, [images]);
+
+  const handleFileDelete = async (fileName) => {
     try {
-        const response = await fetch(
-          `http://localhost:4321/albums/${albumTitle}/images/${fileName}`,
-          {
-            method: "DELETE"
-          }
-        );
-        const data = await response.text();
-        console.log(data);
-      } catch (error) {
-        console.error(error);
-      }
-};
+      const response = await fetch(
+        `http://localhost:4321/albums/${albumTitle}/images/${fileName}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const data = await response.text();
+      console.log(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const albumContainer = ({ containerProps, children, containerRef }) => (
     <div
@@ -88,7 +104,7 @@ const handleFileDelete = async (fileName) => {
     layout,
     layoutOptions,
     imageProps: { style, ...restImageProps },
-    photo
+    photo,
   }) => (
     <div
       style={{
@@ -128,7 +144,7 @@ const handleFileDelete = async (fileName) => {
         spacing={5}
         onClick={({ index }) => setIndex(index)}
         renderContainer={albumContainer}
-        renderPhoto={(props) => photoFrame({ ...props})}
+        renderPhoto={(props) => photoFrame({ ...props })}
       />
       <Lightbox
         slides={photos}
