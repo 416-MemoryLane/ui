@@ -21,7 +21,7 @@ function App() {
   const poll = () => {
     setTimeout(async () => {
       fetchAlbums();
-    }, 3000);
+    }, 100);
   };
 
   const handleAlbumSelection = (title) => {
