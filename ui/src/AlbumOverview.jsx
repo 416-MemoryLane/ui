@@ -15,7 +15,7 @@ export const AlbumOverview = ({ title, images, onBackClick }) => {
       let url = `http://localhost:4321${image}`;
       return { src: url, width: 150, height: 100 };
     });
-  }, []);
+  }, [images]);
 
   const photos = useMemo(() => {
     return images.map((image, i) => {
