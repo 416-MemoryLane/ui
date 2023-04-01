@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ImageViewer } from "./ImageViewer";
+import { AlbumOverview } from "./AlbumOverview";
 import { ArrowForwardIcon } from "./Icons/ArrowForwardIcon";
 
 function App() {
@@ -23,8 +24,13 @@ function App() {
     }, 3000);
   };
 
-  const goToAlbumOverview = () => {
+  const handleAlbumSelection = (title) => {
+    setSelectedAlbum(title);
     setShowAlbumOverview(true);
+  };
+
+  const handleAlbumOverviewBack = () => {
+    setShowAlbumOverview(false);
   };
 
   useEffect(() => {
@@ -32,7 +38,13 @@ function App() {
   }, []);
 
   return showAlbumOverview ? (
-    <ArrowForwardIcon />
+    <div>
+      <AlbumOverview
+        title={selectedAlbum}
+        images={albums.find((album) => album.title === selectedAlbum).images}
+        onBackClick={handleAlbumOverviewBack}
+      />
+    </div>
   ) : (
     <div className="w-full flex justify-center align-middle">
       <ImageViewer
@@ -52,7 +64,7 @@ function App() {
                   <ArrowForwardIcon
                     id={`${title}-forwardIcon`}
                     className=""
-                    onClick={goToAlbumOverview}
+                    onClick={() => handleAlbumSelection(title)}
                   />
                 </div>
               </div>
