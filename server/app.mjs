@@ -62,6 +62,17 @@ app.post("/albums/:albumName/images", (req, res) => {
   });
 });
 
+app.delete("/albums/:albumName/images/:imageName", (req, res) => {
+  const { albumName, imageName } = req.params;
+  var imagePath = `${ALBUM_DIR}/${albumName}/${imageName}`;
+  fs.unlink(imagePath, function (err) {
+    if (err) {
+      return res.end("Error deleting file.");
+    }
+    res.end("File is deleted successfully!");
+  });
+});
+
 app.listen(port, () => {
   console.log("Server running on port " + port);
 });

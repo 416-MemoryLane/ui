@@ -56,7 +56,18 @@ export const AlbumOverview = ({ albumTitle, images, onBackClick }) => {
   };
 
 const handleFileDelete = async (fileName) => {
-    console.log(fileName);
+    try {
+        const response = await fetch(
+          `http://localhost:4321/albums/${albumTitle}/images/${fileName}`,
+          {
+            method: "DELETE"
+          }
+        );
+        const data = await response.text();
+        console.log(data);
+      } catch (error) {
+        console.error(error);
+      }
 };
 
   const albumContainer = ({ containerProps, children, containerRef }) => (
