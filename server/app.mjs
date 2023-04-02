@@ -14,13 +14,12 @@ const STATIC_PATH = "/static";
 
 app.use(STATIC_PATH, express.static(ALBUM_DIR));
 
+// all updates to FS should also update CRDT
 // create album -> create crdt.json in the folder
 // delete album -> delete entire directory?
 // add/remove photos from album -> should update crdt
 //  -> add: just add to added
 //  -> delete: remove from added and add to deleted
-
-// when creating album, sender will send crdt, then we need to write to album directory
 
 app.get("/albums", (req, res) => {
   const albums = fs.readdirSync(ALBUM_DIR, { withFileTypes: true });
@@ -46,12 +45,6 @@ app.get("/albums/:id", (req, res) => {
   console.log(id);
   res.send(id);
 });
-
-// all updates to FS should also update CRDT
-
-// get album's CRDT -> current crdt for an album
-// create CRDT
-// get CRDT
 
 app.post("/albums/:albumName/images", (req, res) => {
   const { albumName } = req.params;
