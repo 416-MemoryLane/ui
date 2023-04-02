@@ -1,8 +1,8 @@
 import { CloseIcon } from "./Icons/CloseIcon";
 
-export const Modal = ({ children, callbackFn }) => {
-  return (
-    <div className="fixed flex h-screen w-screen flex-col content-center items-center justify-center bg-gray-500/50 backdrop-blur-xl dark:bg-gray-900/60">
+export const Modal = ({ isOpen, children, callbackFn }) => {
+  return isOpen ? (
+    <div className="fixed flex h-screen w-screen flex-col content-center items-center justify-center bg-gray-500/50 backdrop-blur-md dark:bg-gray-900/60">
       <div className={`flex max-h-screen  max-w-[1440px] flex-col`}>
         <div className="fixed z-50 -mr-5 place-self-end ">
           <CloseIcon
@@ -15,5 +15,7 @@ export const Modal = ({ children, callbackFn }) => {
         </div>
       </div>
     </div>
+  ) : (
+    <></>
   );
 };
