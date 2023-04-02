@@ -6,6 +6,23 @@ import BeatLoader from "react-spinners/ClipLoader";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+const toastOptions = {
+  position: "top-center",
+  autoClose: 5000,
+  hideProgressBar: false,
+  closeOnClick: true,
+  pauseOnHover: true,
+  pauseOnFocusLoss: false,
+  draggable: true,
+  progress: undefined,
+  theme: "light",
+};
+
+const initialCredentials = {
+  username: "",
+  password: "",
+};
+
 function App() {
   const [albums, setAlbums] = useState([]);
   const [showAlbumOverview, setShowAlbumOverview] = useState(false);
@@ -13,13 +30,11 @@ function App() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState("");
 
+  // Auth
   const [loginLoading, setLoginLoading] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [credentials, setCredentials] = useState({
-    username: "",
-    password: "",
-  });
+  const [credentials, setCredentials] = useState(initialCredentials);
 
   const fetchAlbums = async () => {
     const res = await fetch("http://localhost:4321/albums");
@@ -36,6 +51,14 @@ function App() {
     }, 100);
   };
 
+  useEffect(() => {
+    fetchAlbums();
+    setIsLoggedIn(
+      !!localStorage.getItem("galactus-token") &&
+        !!localStorage.getItem("galactus-user")
+    );
+  }, []);
+
   const handleAlbumSelection = (title) => {
     setSelectedAlbum(title);
     setShowAlbumOverview(true);
@@ -46,28 +69,12 @@ function App() {
   };
 
   const notifySuccessfulLogin = (username) =>
-    toast.success(`${username} successfully logged in`, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
+    toast.success(`${username} successfully logged in`, toastOptions);
+
+  const notifyUnsuccessfulLogin = (msg) => toast.error(msg, toastOptions);
 
   const notifySuccessfulLogout = (username) =>
-    toast.success(`${username} successfully logged out`, {
-      position: "top-center",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "light",
-    });
+    toast.success(`${username} successfully logged out`, toastOptions);
 
   const handleLogin = async () => {
     if (credentials.password.length < 4) {
@@ -93,13 +100,14 @@ function App() {
         localStorage.setItem("galactus-user", user);
         localStorage.setItem("galactus-token", json.token);
         setIsLoggedIn(true);
+        setCredentials(initialCredentials);
+        setLoginLoading(false);
+        setIsLoginModalOpen(false);
         notifySuccessfulLogin(user);
-        setCredentials({ username: "", password: "" });
       } else {
-        alert(json.message);
+        notifyUnsuccessfulLogin(json.message);
+        setLoginLoading(false);
       }
-      setLoginLoading(false);
-      setIsLoginModalOpen(false);
     }
   };
 
@@ -110,14 +118,6 @@ function App() {
     setIsLoggedIn(false);
     notifySuccessfulLogout(user);
   };
-
-  useEffect(() => {
-    fetchAlbums();
-    setIsLoggedIn(
-      !!localStorage.getItem("galactus-token") &&
-        !!localStorage.getItem("galactus-user")
-    );
-  }, []);
 
   return showAlbumOverview ? (
     <div>
