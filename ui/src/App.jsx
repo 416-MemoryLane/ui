@@ -32,6 +32,7 @@ function App() {
   const [selectedAlbumId, setSelectedAlbumId] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState("");
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
 
   // Auth
   const [isLoading, setIsLoading] = useState(false);
@@ -45,10 +46,12 @@ function App() {
 
   const fetchAlbums = async () => {
     try {
-      const res = await fetch("http://localhost:4321/albums");
-      if (res.ok) {
-        const json = await res.json();
-        setAlbums(json);
+      if (!isLoadingImages) {
+        const res = await fetch("http://localhost:4321/albums");
+        if (res.ok) {
+          const json = await res.json();
+          setAlbums(json);
+        }
       }
     } catch (err) {
       console.log(err);
@@ -217,6 +220,7 @@ function App() {
     <div>
       <AlbumOverview
         albumId={selectedAlbumId}
+        setIsLoadingImages={setIsLoadingImages}
         albumTitle={selectedAlbumTitle}
         images={
           albums.find((album) => album.title === selectedAlbumTitle).images
