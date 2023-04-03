@@ -11,7 +11,13 @@ import Slideshow from "yet-another-react-lightbox/plugins/slideshow";
 import Thumbnails from "yet-another-react-lightbox/plugins/thumbnails";
 import "yet-another-react-lightbox/plugins/thumbnails.css";
 
-export const AlbumOverview = ({ albumId, albumTitle, images, onBackClick }) => {
+export const AlbumOverview = ({
+  albumId,
+  albumTitle,
+  images,
+  onBackClick,
+  setIsLoadingImages,
+}) => {
   const [index, setIndex] = useState(-1);
   const [thumbnails, setThumbnails] = useState([]);
   const [photos, setPhotos] = useState([]);
@@ -44,6 +50,7 @@ export const AlbumOverview = ({ albumId, albumTitle, images, onBackClick }) => {
   };
 
   useEffect(() => {
+    setIsLoadingImages(true);
     const promises = images.map((image) => {
       return new Promise((resolve, reject) => {
         const img = new Image();
@@ -80,6 +87,7 @@ export const AlbumOverview = ({ albumId, albumTitle, images, onBackClick }) => {
             return { src: result.src };
           })
         );
+        setIsLoadingImages(false);
       })
       .catch((error) => {
         console.error(error);
