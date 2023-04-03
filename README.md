@@ -1,5 +1,9 @@
 # Memory Lane UI
 
+## Requirements
+- `node >= 18.4` 
+- `yarn >= 1.22`
+
 ## Steps to run
 - Clone repo
 - Install dependencies in both `ui` and `server` directories
