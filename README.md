@@ -2,7 +2,9 @@
 
 ## Requirements
 - `node >= 18.4` 
+  - https://nodejs.org/en
 - `yarn >= 1.22`
+  - https://yarnpkg.com/getting-started/install
 
 ## Steps to run
 - Clone repo
