@@ -159,6 +159,7 @@ export const AlbumOverview = ({ albumId, albumTitle, images, onBackClick }) => {
         boxSizing: "content-box",
         alignItems: "center",
         width: style?.width,
+        maxWidth: "50%",
         padding: `20px`,
         margin: "5px",
         position: "relative",
