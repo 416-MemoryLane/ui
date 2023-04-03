@@ -11,9 +11,11 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-multi-select-component": "^4.3.4",
     "react-photo-album": "^2.0.3",
     "react-spinners": "^0.13.8",
     "react-toastify": "^9.1.2",
+    "uuid": "^9.0.0",
     "yet-another-react-lightbox": "^3.3.0"
   },
   "devDependencies": {

@@ -5,6 +5,8 @@ import { Modal } from "./Modal";
 import BeatLoader from "react-spinners/ClipLoader";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { MultiSelect } from "react-multi-select-component";
+import { v4 as uuidv4 } from "uuid";
 
 const toastOptions = {
   position: "top-center",
@@ -26,23 +28,33 @@ const initialCredentials = {
 function App() {
   const [albums, setAlbums] = useState([]);
   const [showAlbumOverview, setShowAlbumOverview] = useState(false);
-  const [selectedAlbum, setSelectedAlbum] = useState("");
+  const [selectedAlbumTitle, setSelectedAlbumTitle] = useState("");
+  const [selectedAlbumId, setSelectedAlbumId] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [newAlbumName, setNewAlbumName] = useState("");
 
   // Auth
-  const [loginLoading, setLoginLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [credentials, setCredentials] = useState(initialCredentials);
+  const [currentUser, setCurrentUser] = useState("");
+
+  // Galactus
+  const [users, setUsers] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
 
   const fetchAlbums = async () => {
-    const res = await fetch("http://localhost:4321/albums");
-    if (res.ok) {
-      const json = await res.json();
-      setAlbums(json);
+    try {
+      const res = await fetch("http://localhost:4321/albums");
+      if (res.ok) {
+        const json = await res.json();
+        setAlbums(json);
+      }
+    } catch (err) {
+      console.log(err);
+    } finally {
+      poll();
     }
-    poll();
   };
 
   const poll = () => {
@@ -53,25 +65,54 @@ function App() {
 
   useEffect(() => {
     fetchAlbums();
-    setIsLoggedIn(
-      !!localStorage.getItem("galactus-token") &&
-        !!localStorage.getItem("galactus-user")
-    );
+    const token = localStorage.getItem("galactus-token");
+    const user = localStorage.getItem("galactus-user");
+    if (!!token && !!user) {
+      setCurrentUser(user);
+    }
   }, []);
 
-  const handleAlbumSelection = (title) => {
-    setSelectedAlbum(title);
+  useEffect(() => {
+    if (currentUser) {
+      (async () => {
+        const res = await fetch(
+          "https://memory-lane-381119.wl.r.appspot.com/users",
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("galactus-token")}`,
+            },
+          }
+        );
+        const json = await res.json();
+        if (res.ok) {
+          setUsers(json);
+        } else {
+          notifyError("Unable to fetch users");
+        }
+      })();
+    }
+  }, [currentUser]);
+
+  const handleAlbumSelection = (title, albumId) => {
+    console.log(albumId);
+    setSelectedAlbumTitle(title);
+    setSelectedAlbumId(albumId);
     setShowAlbumOverview(true);
   };
 
   const handleAlbumOverviewBack = () => {
+    setSelectedAlbumId("");
+    setSelectedAlbumTitle("");
     setShowAlbumOverview(false);
   };
 
   const notifySuccessfulLogin = (username) =>
     toast.success(`${username} successfully logged in`, toastOptions);
 
-  const notifyUnsuccessfulLogin = (msg) => toast.error(msg, toastOptions);
+  const notifySuccess = (msg) => toast.success(msg, toastOptions);
+
+  const notifyError = (msg) => toast.error(msg, toastOptions);
 
   const notifySuccessfulLogout = (username) =>
     toast.success(`${username} successfully logged out`, toastOptions);
@@ -80,7 +121,7 @@ function App() {
     if (credentials.password.length < 4) {
       alert("Password should be greater than 4 characters.");
     } else {
-      setLoginLoading(true);
+      setIsLoading(true);
       const res = await fetch(
         "https://memory-lane-381119.wl.r.appspot.com/login",
         {
@@ -99,14 +140,14 @@ function App() {
         const user = credentials.username;
         localStorage.setItem("galactus-user", user);
         localStorage.setItem("galactus-token", json.token);
-        setIsLoggedIn(true);
+        setCurrentUser(user);
         setCredentials(initialCredentials);
-        setLoginLoading(false);
+        setIsLoading(false);
         setIsLoginModalOpen(false);
         notifySuccessfulLogin(user);
       } else {
-        notifyUnsuccessfulLogin(json.message);
-        setLoginLoading(false);
+        notifyError(json.message);
+        setIsLoading(false);
       }
     }
   };
@@ -115,20 +156,88 @@ function App() {
     const user = localStorage.getItem("galactus-user");
     localStorage.removeItem("galactus-user");
     localStorage.removeItem("galactus-token");
-    setIsLoggedIn(false);
+    setCurrentUser("");
     notifySuccessfulLogout(user);
+  };
+
+  const handleCreateAlbum = async () => {
+    setIsLoading(true);
+    try {
+      const albumUuid = uuidv4();
+      const res = await fetch(
+        "https://memory-lane-381119.wl.r.appspot.com/add_album",
+        {
+          method: "POST",
+          body: JSON.stringify({
+            albumName: newAlbumName,
+            username: localStorage.getItem("galactus-user"),
+            authorizedUsers: [
+              ...selectedUsers.map((user) => user.value),
+              currentUser,
+            ],
+            uuid: albumUuid,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("galactus-token")}`,
+          },
+        }
+      );
+      const json = await res.json();
+      if (res.ok) {
+        const res2 = await fetch("http://localhost:4321/albums", {
+          method: "POST",
+          body: JSON.stringify({
+            albumName: newAlbumName,
+            uuid: albumUuid,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        if (res2.ok) {
+          setNewAlbumName("");
+          setSelectedUsers([]);
+          setIsCreateModalOpen(false);
+          notifySuccess(json.message);
+        } else {
+          notifyError(await res2.json());
+        }
+      } else {
+        notifyError(json.error);
+      }
+    } catch (err) {
+      notifyError(JSON.stringify(err.message));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return showAlbumOverview ? (
     <div>
       <AlbumOverview
-        albumTitle={selectedAlbum}
-        images={albums.find((album) => album.title === selectedAlbum).images}
+        albumId={selectedAlbumId}
+        albumTitle={selectedAlbumTitle}
+        images={
+          albums.find((album) => album.title === selectedAlbumTitle).images
+        }
         onBackClick={handleAlbumOverviewBack}
       />
     </div>
   ) : (
     <div>
+      <ToastContainer
+        position="top-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
       <Modal
         isOpen={isCreateModalOpen}
         callbackFn={() => setIsCreateModalOpen(false)}
@@ -136,14 +245,25 @@ function App() {
         <div className="w-[50rem] flex flex-col gap-5">
           <p className="self-center text-3xl">Create Album</p>
           <input
-            className="border-2 rounded-md h-10 p-3"
+            className="border-[1px] rounded-[4px] border-gray-300 h-10 p-3"
             placeholder="Enter album name..."
             value={newAlbumName}
             onChange={(e) => setNewAlbumName(e.target.value)}
             type="text"
           />
-          <div className="hover:cursor-pointer py-2 rounded-lg border-2 border-emerald-200 self-center bg-emerald-100 px-6">
-            Submit
+          <MultiSelect
+            options={users
+              .filter((user) => user !== currentUser)
+              .map((user) => ({ value: user, label: user }))}
+            value={selectedUsers}
+            onChange={setSelectedUsers}
+            labelledBy="Select"
+          />
+          <div
+            className="hover:cursor-pointer py-2 rounded-lg border-2 border-emerald-200 self-center bg-emerald-100 px-6"
+            onClick={handleCreateAlbum}
+          >
+            {isLoading ? <BeatLoader color="#36d7b7" /> : "Submit"}
           </div>
         </div>
       </Modal>
@@ -175,7 +295,7 @@ function App() {
             className="hover:cursor-pointer py-2 rounded-lg border-2 border-emerald-200 self-center bg-emerald-100 px-6"
             onClick={handleLogin}
           >
-            {loginLoading ? <BeatLoader color="#36d7b7" /> : "Submit"}
+            {isLoading ? <BeatLoader color="#36d7b7" /> : "Submit"}
           </div>
         </div>
       </Modal>
@@ -184,12 +304,12 @@ function App() {
           <div className="flex justify-between my-8">
             <span className="flex">
               <p className="text-4xl">Memory Lane</p>
-              {!isLoggedIn && (
-                <p className="ml-2 text-4xl text-slate-500">(Offline)</p>
-              )}
+              <p className="ml-2 text-4xl text-slate-500">
+                {currentUser ? `(Logged in as ${currentUser})` : "(Offline)"}
+              </p>
             </span>
             <div className="flex gap-3">
-              {isLoggedIn && (
+              {currentUser && (
                 <p
                   className="self-center bg-slate-200 border-2 border-slate-300 py-2 px-4 rounded-xl hover:shadow-lg hover:cursor-pointer"
                   onClick={() => setIsCreateModalOpen(true)}
@@ -197,7 +317,7 @@ function App() {
                   Add album
                 </p>
               )}
-              {isLoggedIn ? (
+              {currentUser ? (
                 <p
                   className="self-center bg-rose-100 border-2 border-rose-200 py-2 px-4 rounded-xl hover:shadow-lg hover:cursor-pointer"
                   onClick={handleLogout}
@@ -214,7 +334,7 @@ function App() {
               )}
             </div>
           </div>
-          {albums.map(({ title, images }) => {
+          {albums.map(({ albumId, title, images }) => {
             return (
               <div
                 key={`${title}-album`}
@@ -226,7 +346,7 @@ function App() {
                     <ArrowForwardIcon
                       id={`${title}-forwardIcon`}
                       className="cursor-pointer"
-                      onClick={() => handleAlbumSelection(title)}
+                      onClick={() => handleAlbumSelection(title, albumId)}
                     />
                   </div>
                 </div>
@@ -251,18 +371,6 @@ function App() {
           })}
         </div>
       </div>
-      <ToastContainer
-        position="top-center"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="light"
-      />
     </div>
   );
 }
