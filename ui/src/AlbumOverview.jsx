@@ -198,11 +198,8 @@ export const AlbumOverview = ({ albumId, albumTitle, images, onBackClick }) => {
           </div>
         </div>
       </Modal>
-      <div className="mx-auto px-8 sm:px-10 lg:px-12 w-7/12">
+      <div className="mx-auto px-8 sm:px-10 lg:px-12 lg:py-3">
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold absolute right-[50%]">
-            {albumTitle}
-          </h1>
           <div>
             <button
               className="px-3 hover:text-sky-400"
@@ -217,6 +214,7 @@ export const AlbumOverview = ({ albumId, albumTitle, images, onBackClick }) => {
               <span className="text-md font-semibold">Delete Album</span>
             </button>
           </div>
+          <h1 className="text-2xl font-bold">{albumTitle}</h1>
           <CloseIcon
             className="hover:fill-current hover:text-sky-400 cursor-pointer"
             onClick={onBackClick}
